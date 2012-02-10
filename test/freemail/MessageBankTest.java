@@ -26,6 +26,7 @@ import utils.Utils;
 import junit.framework.TestCase;
 
 public class MessageBankTest extends TestCase {
+	protected static final String BASE64_USERNAME = "D3MrAR-AVMqKJRjXnpKW2guW9z1mw5GZ9BB15mYVkVc";
 	private final static String ACCOUNT_DIR = "accdir";
 
 	private File accountDir;
@@ -45,7 +46,7 @@ public class MessageBankTest extends TestCase {
 		}
 
 		//Create the root message bank
-		rootMessageBank = new MessageBank(new FreemailAccount(null, accountDir, null));
+		rootMessageBank = new MessageBank(new FreemailAccount(BASE64_USERNAME, accountDir, null, null));
 	}
 
 	@Override

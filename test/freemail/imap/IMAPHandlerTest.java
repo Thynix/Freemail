@@ -40,7 +40,7 @@ public class IMAPHandlerTest extends IMAPTestBase {
 
 	public void testIMAPLogin() throws IOException {
 		List<String> commands = new LinkedList<String>();
-		commands.add("0001 LOGIN " + USERNAME + " test");
+		commands.add("0001 LOGIN " + IMAP_USERNAME + " test");
 
 		List<String> expectedResponse = new LinkedList<String>();
 		expectedResponse.add("* OK [CAPABILITY IMAP4rev1 CHILDREN NAMESPACE] Freemail ready - hit me with your rhythm stick.");
@@ -61,7 +61,7 @@ public class IMAPHandlerTest extends IMAPTestBase {
 		//Read the greeting
 		String line = fromHandler.readLine();
 
-		send(toHandler, "0001 LOGIN " + USERNAME + " test\r\n");
+		send(toHandler, "0001 LOGIN " + IMAP_USERNAME + " test\r\n");
 
 		line = readTaggedResponse(fromHandler);
 		assertEquals("0001 NO Login failed", line);
@@ -71,7 +71,7 @@ public class IMAPHandlerTest extends IMAPTestBase {
 
 	public void testIMAPSelect() throws IOException {
 		List<String> commands = new LinkedList<String>();
-		commands.add("0001 LOGIN " + USERNAME + " test");
+		commands.add("0001 LOGIN " + IMAP_USERNAME + " test");
 		commands.add("0002 SELECT INBOX");
 
 		List<String> expectedResponse = new LinkedList<String>();
@@ -103,7 +103,7 @@ public class IMAPHandlerTest extends IMAPTestBase {
 
 		fromHandler.readLine(); //Greeting
 
-		send(toHandler, "0001 LOGIN " + USERNAME + " test\r\n");
+		send(toHandler, "0001 LOGIN " + IMAP_USERNAME + " test\r\n");
 		readTaggedResponse(fromHandler);
 
 		send(toHandler, "0002 SELECT INBOX\r\n");
@@ -121,7 +121,7 @@ public class IMAPHandlerTest extends IMAPTestBase {
 
 	public void testIMAPSelectUnknown() throws IOException {
 		List<String> commands = new LinkedList<String>();
-		commands.add("0001 LOGIN " + USERNAME + " test");
+		commands.add("0001 LOGIN " + IMAP_USERNAME + " test");
 		commands.add("0002 SELECT ShouldNotExist\r\n");
 
 		List<String> expectedResponse = new LinkedList<String>();

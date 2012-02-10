@@ -29,10 +29,13 @@ import java.io.PrintStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Date;
+import java.util.Random;
 import java.util.Vector;
 import java.util.Enumeration;
 
 import freemail.imap.IMAPMessageFlags;
+import freemail.utils.Logger;
 
 public class MailMessage {
 	private File file;
@@ -42,8 +45,9 @@ public class MailMessage {
 	private BufferedReader brdr;
 	private int msg_seqnum=0;
 	public IMAPMessageFlags flags;
+	private static final Random messageIdRandom = new Random();
 	
-	MailMessage(File f, int msg_seqnum) {
+	public MailMessage(File f, int msg_seqnum) {
 		this.file = f;
 		this.headers = new Vector<MailMessageHeader>();
 		this.msg_seqnum=msg_seqnum;
@@ -101,6 +105,34 @@ public class MailMessage {
 		return buf.toString();
 	}
 	
+	@Override
+	public int hashCode() {
+		if(file == null) {
+			return 0;
+		}
+
+		return file.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if(obj == null) {
+			return false;
+		}
+		if(!(obj instanceof MailMessage)) {
+			return false;
+		}
+		MailMessage other = (MailMessage) obj;
+		if(file == null) {
+			if(other.file != null) {
+				return false;
+			}
+		} else if(!file.equals(other.file)) {
+			return false;
+		}
+		return true;
+	}
+
 	public String[] getHeadersAsArray(String name) {
 		Vector<String> hdrs = new Vector<String>();
 		
@@ -318,6 +350,28 @@ public class MailMessage {
 		}
 	}
 	
+	@Override
+	public String toString() {
+		return "MailMessage backed by " + file;
+	}
+
+	/**
+	 * Generated a message-id from the specified domain and date. The generated message-id will be
+	 * of the form &lt;local part&gt;@&lt;domain&gt;, where the local part is generated using the
+	 * specified date and a random number large enough that collisions are unlikely.
+	 * @param domain the domain part of the message-id
+	 * @param date the date used in the message-id
+	 * @return the generated message-id
+	 */
+	public static String generateMessageID(String domain, Date date) {
+		if(domain == null) {
+			Logger.error(MailMessage.class, "Domain passed to generateMessageID() was null");
+			new Exception("Domain passed to generateMessageID() was null").printStackTrace();
+		}
+
+		return date.getTime() + messageIdRandom.nextLong() + "@" + domain;
+	}
+
 	private static class MailMessageHeader {
 		public String name;
 		public String val;

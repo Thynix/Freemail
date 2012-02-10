@@ -44,11 +44,12 @@ import utils.Utils;
  * Extend this and add the tests to the subclass.
  */
 public abstract class IMAPTestBase extends TestCase {
-	protected static final String USERNAME = "test";
+	protected static final String BASE64_USERNAME = "D3MrAR-AVMqKJRjXnpKW2guW9z1mw5GZ9BB15mYVkVc";
+	protected static final String BASE32_USERNAME = "b5zswai7ybkmvcrfddlz5euw3ifzn5z5m3bzdgpucb26mzqvsflq";
+	protected static final String IMAP_USERNAME = "zidel@b5zswai7ybkmvcrfddlz5euw3ifzn5z5m3bzdgpucb26mzqvsflq.freemail";
 
 	private static final File TEST_DIR = new File("imaptest");
 	private static final String ACCOUNT_MANAGER_DIR = "account_manager_dir";
-	private static final String ACCOUNT_DIR = "account_dir";
 
 	protected final Map<String, File> accountDirs = new HashMap<String, File>();
 	protected File accountManagerDir;
@@ -59,12 +60,12 @@ public abstract class IMAPTestBase extends TestCase {
 		assertTrue(TEST_DIR.mkdir());
 
 		accountManagerDir = createDir(TEST_DIR, ACCOUNT_MANAGER_DIR);
-		File accountDir = createDir(TEST_DIR, ACCOUNT_DIR);
-		accountDirs.put(USERNAME, accountDir);
+		File accountDir = createDir(TEST_DIR, BASE32_USERNAME);
+		accountDirs.put(BASE64_USERNAME, accountDir);
 
 		//Add a few messages to the inbox
 		AccountManager temp = new ConfigurableAccountManager(accountManagerDir, false, accountDirs);
-		FreemailAccount account = temp.authenticate(USERNAME, "");
+		FreemailAccount account = temp.authenticate(BASE64_USERNAME, "");
 		for(int i = 0; i < 10; i++) {
 			MailMessage m = account.getMessageBank().createMessage();
 			m.addHeader("Subject", "IMAP test message " + i);
