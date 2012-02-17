@@ -42,8 +42,8 @@
 
 	<target name="bouncycastle-fetch" depends="bouncycastle-check" unless="bouncycastle-dist.present">
 		<mkdir dir="${deps}" />
-		<get src="http://www.bouncycastle.org/download/${bcdist}.zip" 
-		dest="${deps}/${bcdist}.zip" 
+		<get src="http://www.bouncycastle.org/download/${bcdist}.zip"
+		dest="${deps}/${bcdist}.zip"
 		verbose="true"
 		usetimestamp="true" />
 
@@ -76,7 +76,7 @@
 		<javac srcdir="${build}" destdir="${build}" debug="on" optimize="on" source="1.6" target="1.6">
 			<include name="${version.src}"/>
 		</javac>
-		
+
 		<!-- Bundle the whole lot together, unless anyone whinges.
 		     It makes it much easier to run -->
 		<javac srcdir="${src}" destdir="${build}" debug="on" optimize="on" source="1.6" target="1.6">
