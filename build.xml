@@ -9,12 +9,11 @@
 	<property name="test.run" location="run"/>
 	<property name="build" location="build"/>
 	<property name="build-test" location="build-test"/>
-	<property name="lib" location="lib"/>
 	<property name="dist" location="dist"/>
 	<property name="deps" location="deps"/>
 	<property name="version.src" value="freemail/Version.java"/>
 	<property name="version.build" value="freemail/Version.class"/>
-	
+
 	<property name="bcdist" value="lcrypto-jdk14-138"/>
 	<property name="freenet-cvs-snapshot.location" location="../fred/dist/freenet.jar"/>
 
@@ -43,8 +42,8 @@
 
 	<target name="bouncycastle-fetch" depends="bouncycastle-check" unless="bouncycastle-dist.present">
 		<mkdir dir="${deps}" />
-		<get src="http://www.bouncycastle.org/download/${bcdist}.zip" 
-		dest="${deps}/${bcdist}.zip" 
+		<get src="http://www.bouncycastle.org/download/${bcdist}.zip"
+		dest="${deps}/${bcdist}.zip"
 		verbose="true"
 		usetimestamp="true" />
 
@@ -76,14 +75,18 @@
 		<!-- Compile the patched version file -->
 		<javac srcdir="${build}" destdir="${build}" debug="on" optimize="on" source="1.6" target="1.6">
 			<include name="${version.src}"/>
+			<classpath>
+				<pathelement location="${freenet-cvs-snapshot.location}"/>
+				<pathelement path="${main.lib}"/>
+			</classpath>
 		</javac>
-		
+
 		<!-- Bundle the whole lot together, unless anyone whinges.
 		     It makes it much easier to run -->
 		<javac srcdir="${src}" destdir="${build}" debug="on" optimize="on" source="1.6" target="1.6">
 			<classpath>
 				<pathelement location="${freenet-cvs-snapshot.location}"/>
-				<pathelement location="${lib}"/>
+				<pathelement path="${main.lib}"/>
 			</classpath>
 			<compilerarg value="-Xlint"/>
 		</javac>
@@ -110,6 +113,7 @@
 				<pathelement location="${freenet-cvs-snapshot.location}"/>
 				<pathelement location="${build}"/>
 				<pathelement location="${junit}"/>
+				<pathelement path="${test.lib}"/>
 			</classpath>
 			<compilerarg line="-Xlint"/>
 		</javac>
@@ -123,6 +127,7 @@
 				<pathelement path="${build}"/>
 				<pathelement path="${build-test}"/>
 				<pathelement location="${junit}"/>
+				<pathelement path="${test.lib}"/>
 			</classpath>
 			<formatter type="plain" usefile="false"/>
 			<batchtest fork="yes">
@@ -143,11 +148,11 @@
 				<attribute name="Built-By" value="${user.name}"/>
 				<section name="common">
 					<attribute name="Implementation-Title" value="Freemail"/>
-					<attribute name="Implementation-Version" value="0.0"/> 
+					<attribute name="Implementation-Version" value="0.0"/>
 					<attribute name="Implementation-Vendor" value="Dave Baker"/>
 				</section>
 			</manifest>
-		</jar>    
+		</jar>
 	</target>
 
 	<target name="clean">
@@ -160,19 +165,13 @@
 		<delete dir="${dist}"/>
 	</target>
 
-	<target name="cleaner">
+	<target name="cleaner" depends="clean">
 		<delete dir="${build}"/>
-		<delete dir="${build-test}"/>
-	</target>
-
-	<target name="squeakyclean" depends="cleaner">
-		<delete dir="${deps}"/>
 	</target>
 
 	<target name="distclean" description="Delete everything and restore to the original state.">
 		<delete dir="${build}"/>
 		<delete dir="${build-test}"/>
-		<delete dir="${lib}"/>
 		<delete dir="${deps}"/>
 	</target>
 </project>

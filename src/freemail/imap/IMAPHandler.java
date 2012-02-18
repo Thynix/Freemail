@@ -333,6 +333,15 @@ public class IMAPHandler extends ServerHandler implements Runnable {
 	}
 	
 	private void handle_check(IMAPMessage msg) {
+		if(!this.verify_auth(msg)) {
+			return;
+		}
+
+		if(this.mb == null) {
+			this.reply(msg, "NO No mailbox selected");
+			return;
+		}
+
 		this.reply(msg, "OK Check completed");
 	}
 	
@@ -615,12 +624,18 @@ public class IMAPHandler extends ServerHandler implements Runnable {
 				this.ps.print(")\r\n");
 				this.ps.flush();
 				return true;
-			} else {
+			} else if((i + 1) < imap_args.length) {
 				this.ps.print(" ");
 			}
 		}
 		
 		// if we get here, we've reached the end of the list without a terminating parenthesis. Naughty client.
+		if (send_uid_too) {
+			this.ps.print(" UID "+msg.getUID());
+		}
+		this.ps.print(")\r\n");
+		this.ps.flush();
+
 		return false;
 	}
 	
@@ -668,6 +683,13 @@ public class IMAPHandler extends ServerHandler implements Runnable {
 			this.ps.flush();
 			return this.sendBody(mmsg, "header");
 		} else if (attr.startsWith("internaldate")) {
+			/*
+			 * FIXME: Internaldate should not return Date from the message
+			 * For messages received though SMTP we want the date when we received it, for messages
+			 * added by COPY it should be the internal date of the source message, and for messages
+			 * added by APPEND it should either be the specified date or the date of the APPEND.
+			 * See RFC 3501 section 2.3.3 (Internal Date Message Attribute).
+			 */
 			val = mmsg.getFirstHeader("Date");
 			if (val == null) {
 				// possibly should keep our own dates...
@@ -952,6 +974,10 @@ public class IMAPHandler extends ServerHandler implements Runnable {
 	}
 	
 	private void handle_expunge(IMAPMessage msg) {
+		if (!this.verify_auth(msg)) {
+			return;
+		}
+
 		if (this.mb == null) {
 			this.reply(msg, "NO No mailbox selected");
 			return;
@@ -962,6 +988,10 @@ public class IMAPHandler extends ServerHandler implements Runnable {
 	}
 	
 	private void handle_close(IMAPMessage msg) {
+		if (!this.verify_auth(msg)) {
+			return;
+		}
+
 		if (this.mb == null) {
 			this.reply(msg, "NO No mailbox selected");
 			return;
@@ -987,6 +1017,10 @@ public class IMAPHandler extends ServerHandler implements Runnable {
 	}
 	
 	private void handle_namespace(IMAPMessage msg) {
+		if(!this.verify_auth(msg)) {
+			return;
+		}
+
 		this.sendState("NAMESPACE ((\"INBOX.\" \".\")) NIL NIL");
 		this.reply(msg, "OK Namespace completed");
 	}
@@ -1210,6 +1244,10 @@ public class IMAPHandler extends ServerHandler implements Runnable {
 	}
 	
 	private void handle_append(IMAPMessage msg) {
+		if(!this.verify_auth(msg)) {
+			return;
+		}
+
 		if (msg.args == null || msg.args.length < 2) {
 			this.reply(msg, "BAD Not enough arguments");
 			return;

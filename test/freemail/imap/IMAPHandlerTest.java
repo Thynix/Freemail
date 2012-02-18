@@ -142,4 +142,165 @@ public class IMAPHandlerTest extends IMAPTestBase {
 
 		runSimpleTest(commands, expectedResponse);
 	}
+
+	public void testLogout() throws IOException {
+		List<String> commands = new LinkedList<String>();
+		commands.add("0001 LOGOUT");
+
+		List<String> expectedResponse = new LinkedList<String>();
+		expectedResponse.add("* OK [CAPABILITY IMAP4rev1 CHILDREN NAMESPACE] Freemail ready - hit me with your rhythm stick.");
+		expectedResponse.add("* BYE");
+		expectedResponse.add("0001 OK Bye");
+
+		runSimpleTest(commands, expectedResponse);
+	}
+
+	public void testCapability() throws IOException {
+		List<String> commands = new LinkedList<String>();
+		commands.add("0001 CAPABILITY");
+
+		List<String> expectedResponse = new LinkedList<String>();
+		expectedResponse.add("* OK [CAPABILITY IMAP4rev1 CHILDREN NAMESPACE] Freemail ready - hit me with your rhythm stick.");
+		expectedResponse.add("* CAPABILITY IMAP4rev1 CHILDREN NAMESPACE");
+		expectedResponse.add("0001 OK Capability completed");
+
+		runSimpleTest(commands, expectedResponse);
+	}
+
+	public void testNoop() throws IOException {
+		List<String> commands = new LinkedList<String>();
+		commands.add("0001 NOOP");
+
+		List<String> expectedResponse = new LinkedList<String>();
+		expectedResponse.add("* OK [CAPABILITY IMAP4rev1 CHILDREN NAMESPACE] Freemail ready - hit me with your rhythm stick.");
+		expectedResponse.add("0001 OK NOOP completed");
+
+		runSimpleTest(commands, expectedResponse);
+	}
+
+	public void testLoginWithoutArguments() throws IOException {
+		List<String> commands = new LinkedList<String>();
+		commands.add("0001 LOGIN");
+
+		List<String> expectedResponse = new LinkedList<String>();
+		expectedResponse.add("* OK [CAPABILITY IMAP4rev1 CHILDREN NAMESPACE] Freemail ready - hit me with your rhythm stick.");
+		expectedResponse.add("0001 BAD Not enough arguments");
+
+		runSimpleTest(commands, expectedResponse);
+	}
+
+	public void testLoginWithoutPassword() throws IOException {
+		List<String> commands = new LinkedList<String>();
+		commands.add("0001 LOGIN " + IMAP_USERNAME);
+
+		List<String> expectedResponse = new LinkedList<String>();
+		expectedResponse.add("* OK [CAPABILITY IMAP4rev1 CHILDREN NAMESPACE] Freemail ready - hit me with your rhythm stick.");
+		expectedResponse.add("0001 BAD Not enough arguments");
+
+		runSimpleTest(commands, expectedResponse);
+	}
+
+	/*
+	 * This checks for the bug fixed in c43fcb18df185a5c67fbfcabf31eca22f44b7493.
+	 * The IMAP handler thread would crash with a NullPointerException if
+	 * append was called with a subfolder of index before logging in.
+	 */
+	public void testAppend() throws IOException {
+		List<String> commands = new LinkedList<String>();
+		commands.add("0001 APPEND inbox.folder arg2");
+
+		List<String> expectedResponse = new LinkedList<String>();
+		expectedResponse.add("* OK [CAPABILITY IMAP4rev1 CHILDREN NAMESPACE] Freemail ready - hit me with your rhythm stick.");
+		expectedResponse.add("0001 NO Must be authenticated");
+
+		runSimpleTest(commands, expectedResponse);
+	}
+
+	public void testImplicitExpungeOnClose() throws IOException {
+		List<String> commands = new LinkedList<String>();
+		commands.add("0001 LOGIN " + IMAP_USERNAME + " test");
+		commands.add("0002 SELECT INBOX");
+		commands.add("0003 STORE 1 +FLAGS (\\Deleted)");
+		commands.add("0004 CLOSE");
+		commands.add("0005 SELECT INBOX");
+
+		List<String> expectedResponse = new LinkedList<String>();
+		expectedResponse.add("* OK [CAPABILITY IMAP4rev1 CHILDREN NAMESPACE] Freemail ready - hit me with your rhythm stick.");
+		expectedResponse.add("0001 OK Logged in");
+		expectedResponse.add("* FLAGS (\\Seen \\Answered \\Flagged \\Deleted \\Draft \\Recent)");
+		expectedResponse.add("* OK [PERMANENTFLAGS (\\* \\Seen \\Answered \\Flagged \\Deleted \\Draft \\Recent)] Limited");
+		expectedResponse.add("* 10 EXISTS");
+		expectedResponse.add("* 10 RECENT");
+		expectedResponse.add("* OK [UIDVALIDITY 1] Ok");
+		expectedResponse.add("0002 OK [READ-WRITE] Done");
+		expectedResponse.add("* 1 FETCH FLAGS (\\Seen \\Deleted)");
+		expectedResponse.add("0003 OK Store completed");
+		expectedResponse.add("0004 OK Mailbox closed");
+		expectedResponse.add("* FLAGS (\\Seen \\Answered \\Flagged \\Deleted \\Draft \\Recent)");
+		expectedResponse.add("* OK [PERMANENTFLAGS (\\* \\Seen \\Answered \\Flagged \\Deleted \\Draft \\Recent)] Limited");
+		expectedResponse.add("* 9 EXISTS");
+		expectedResponse.add("* 0 RECENT");
+		expectedResponse.add("* OK [UIDVALIDITY 1] Ok");
+		expectedResponse.add("0005 OK [READ-WRITE] Done");
+
+		runSimpleTest(commands, expectedResponse);
+	}
+
+	public void testNoImplicitExpungeOnSelect() throws IOException {
+		List<String> commands = new LinkedList<String>();
+		commands.add("0001 LOGIN " + IMAP_USERNAME + " test");
+		commands.add("0002 SELECT INBOX");
+		commands.add("0003 STORE 1 +FLAGS (\\Deleted)");
+		commands.add("0004 SELECT INBOX");
+
+		List<String> expectedResponse = new LinkedList<String>();
+		expectedResponse.add("* OK [CAPABILITY IMAP4rev1 CHILDREN NAMESPACE] Freemail ready - hit me with your rhythm stick.");
+		expectedResponse.add("0001 OK Logged in");
+		expectedResponse.add("* FLAGS (\\Seen \\Answered \\Flagged \\Deleted \\Draft \\Recent)");
+		expectedResponse.add("* OK [PERMANENTFLAGS (\\* \\Seen \\Answered \\Flagged \\Deleted \\Draft \\Recent)] Limited");
+		expectedResponse.add("* 10 EXISTS");
+		expectedResponse.add("* 10 RECENT");
+		expectedResponse.add("* OK [UIDVALIDITY 1] Ok");
+		expectedResponse.add("0002 OK [READ-WRITE] Done");
+		expectedResponse.add("* 1 FETCH FLAGS (\\Seen \\Deleted)");
+		expectedResponse.add("0003 OK Store completed");
+		expectedResponse.add("* FLAGS (\\Seen \\Answered \\Flagged \\Deleted \\Draft \\Recent)");
+		expectedResponse.add("* OK [PERMANENTFLAGS (\\* \\Seen \\Answered \\Flagged \\Deleted \\Draft \\Recent)] Limited");
+		expectedResponse.add("* 10 EXISTS");
+		expectedResponse.add("* 0 RECENT");
+		expectedResponse.add("* OK [UIDVALIDITY 1] Ok");
+		expectedResponse.add("0004 OK [READ-WRITE] Done");
+
+		runSimpleTest(commands, expectedResponse);
+	}
+
+	public void testExplicitExpunge() throws IOException {
+		List<String> commands = new LinkedList<String>();
+		commands.add("0001 LOGIN " + IMAP_USERNAME + " test");
+		commands.add("0002 SELECT INBOX");
+		commands.add("0003 STORE 1:2 +FLAGS (\\Deleted)");
+		commands.add("0004 STORE 4 +FLAGS (\\Deleted)");
+		commands.add("0005 EXPUNGE");
+
+		List<String> expectedResponse = new LinkedList<String>();
+		expectedResponse.add("* OK [CAPABILITY IMAP4rev1 CHILDREN NAMESPACE] Freemail ready - hit me with your rhythm stick.");
+		expectedResponse.add("0001 OK Logged in");
+		expectedResponse.add("* FLAGS (\\Seen \\Answered \\Flagged \\Deleted \\Draft \\Recent)");
+		expectedResponse.add("* OK [PERMANENTFLAGS (\\* \\Seen \\Answered \\Flagged \\Deleted \\Draft \\Recent)] Limited");
+		expectedResponse.add("* 10 EXISTS");
+		expectedResponse.add("* 10 RECENT");
+		expectedResponse.add("* OK [UIDVALIDITY 1] Ok");
+		expectedResponse.add("0002 OK [READ-WRITE] Done");
+		expectedResponse.add("* 1 FETCH FLAGS (\\Seen \\Deleted)");
+		expectedResponse.add("* 2 FETCH FLAGS (\\Seen \\Deleted)");
+		expectedResponse.add("0003 OK Store completed");
+		expectedResponse.add("* 4 FETCH FLAGS (\\Seen \\Deleted)");
+		expectedResponse.add("0004 OK Store completed");
+		expectedResponse.add("* 1 EXPUNGE");
+		expectedResponse.add("* 1 EXPUNGE");
+		expectedResponse.add("* 2 EXPUNGE");
+		expectedResponse.add("0005 OK Expunge complete");
+
+		runSimpleTest(commands, expectedResponse);
+	}
 }
